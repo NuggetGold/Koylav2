@@ -1,9 +1,19 @@
 {
   "bot":
   {
-    "token": "MTI1NjI4MDc5MjQ2MDQzMTQ1Mw.GsoMOw.3fVz8kBbl8kJGf5F3hE2sZEJx88DEhYK4hpF5M",
+    "token": "",
     "version": "2.0.1",
     "helpers": " - ",
     "creator": "NuggetGoldX"
+  },
+  "eblans": {
+    "murk": {
+      "name": "murk.java",
+      "id": "640829107768262672"
+    },
+    "hublot": {
+      "name": "hublot8064",
+      "id": "965199986675576832"
+    }
   }
 }

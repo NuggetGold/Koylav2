@@ -43,4 +43,16 @@ public class Config {
             e.printStackTrace();
         }
     }
+
+    public static JsonObject getJsonObject(String path) {
+        String[] keys = path.split("\\.");
+        JsonElement current = configData;
+
+        for (String key : keys) {
+            if (current != null && current.isJsonObject()) {
+                current = current.getAsJsonObject().get(key);
+            }
+        }
+        return (current != null && current.isJsonObject()) ? current.getAsJsonObject() : null;
+    }
 }

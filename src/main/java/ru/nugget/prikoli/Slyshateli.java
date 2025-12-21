@@ -10,10 +10,14 @@ public class Slyshateli extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         // Стринги и остальная залупа
         String message = event.getMessage().getContentRaw();
+        MurkDetector murkDetector = null;
 
         // Проверки на мурка.
         if (event.getAuthor().isBot()) return;
-        if (event.getAuthor().equals("murk")) return; event.getMessage().reply("Муркам слово не давали");
+        if (murkDetector.isEblan(event.getAuthor())) {
+            event.getMessage().reply("Муркам и хублотам слово не давали.");
+            return;
+        }
 
         if (message.equalsIgnoreCase("!ping")) {
             event.getChannel().sendMessage("Сам.").queue();
