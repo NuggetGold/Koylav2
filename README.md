@@ -18,7 +18,7 @@
 ------------
 1. Клонируйте репозиторий:
    ```
-   git clone https://github.com/<ваш-юзер>/<repo>.git
+   git clone https://github.com/NuggetGold/Koylav2.git
    cd <repo>
    ```
 
