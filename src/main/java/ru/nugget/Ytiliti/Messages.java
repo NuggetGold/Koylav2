@@ -1,17 +1,13 @@
 package ru.nugget.Ytiliti;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonElement;
+import com.google.gson.*;
 
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class Config {
-    private static final String CONFIG_FILE = "src/config.json";
+public class Messages {
+    private static final String CONFIG_FILE = "src/Messages.json";
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject configData;
 
@@ -19,7 +15,6 @@ public class Config {
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
             configData = JsonParser.parseReader(reader).getAsJsonObject();
         } catch (IOException e) {
-            System.err.println("Файл не найден, создаем пустой конфиг.");
             configData = new JsonObject();
         }
     }
