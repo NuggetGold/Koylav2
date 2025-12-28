@@ -2,11 +2,20 @@ package ru.nugget.commands;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import ru.nugget.Ytiliti.Config;
+import ru.nugget.Ytiliti.RoleChecker;
+import ru.nugget.prikoli.MurkDetector;
+
+import java.time.temporal.ValueRange;
 import java.util.*;
+
+import static ru.nugget.log.LoggerLogic.SendInfo;
 
 public class WordGame implements CommandHandler {
     public static final Map<String, String> currentGames = new HashMap<>();
     public static final Map<String, Set<String>> usedWords = new HashMap<>();
+
+    private static final int MIN_SIMILARITY_LENGTH = 3;
+    private static final int MAX_EDIT_DISTANCE = 2;
 
     @Override public String getName() { return "слово"; }
     @Override public String getDescription() { return "Игра слова"; }
@@ -60,6 +69,11 @@ public class WordGame implements CommandHandler {
             return;
         }
 
+        if (!startWord.matches("[а-яё]+")) {
+            event.getChannel().sendMessage("❌ Слово должно содержать только русские буквы!").queue();
+            return;
+        }
+
         currentGames.put(channelId, startWord);
         usedWords.put(channelId, new HashSet<>());
         usedWords.get(channelId).add(startWord);
@@ -84,6 +98,17 @@ public class WordGame implements CommandHandler {
             return false;
         }
 
+        if (MurkDetector.isEblan(event.getAuthor())) {
+            SendInfo(event, event.getAuthor().getName() + " Попытался сыграть но соснул хуйца");
+            return false;
+        }
+        String bannedRoleIds = Config.getString("word.banned_roles");
+
+        if (RoleChecker.hasBannedRole(event.getMember(), Collections.singletonList(bannedRoleIds))) {
+            SendInfo(event, event.getAuthor().getName() + " Попытался сыграть но соснул хуйца");
+            return false;
+        }
+
         word = word.toLowerCase().trim();
         String lastWord = currentGames.get(channelId);
         char requiredLetter = getNextLetter(lastWord);
@@ -98,12 +123,39 @@ public class WordGame implements CommandHandler {
             return true;
         }
 
+        if (word.length() < 2) {
+            event.getChannel().sendMessage("❌ Слово должно быть минимум из 2 букв!").queue();
+            return true;
+        }
+
+        if (!word.matches("[а-яё]+")) {
+            event.getChannel().sendMessage("❌ Слово должно содержать только русские буквы!").queue();
+            return true;
+        }
+
         if (usedWords.get(channelId).contains(word)) {
             event.getChannel().sendMessage("❌ Слово **" + word + "** уже использовалось!").queue();
             return true;
         }
-        if (word.length() < 2) {
-            event.getChannel().sendMessage("❌ Слово должно быть минимум из 2 букв!").queue();
+
+        String similarityCheck = checkWordSimilarity(word, usedWords.get(channelId));
+        if (similarityCheck != null) {
+            event.getChannel().sendMessage(
+                    "❌ Слово **" + word + "** слишком похоже на **" + similarityCheck + "**!\n" +
+                            "⚠️ Слова не должны быть похожими по:\n" +
+                            "• Окончанию\n" +
+                            "• Началу\n" +
+                            "• Содержанию одного в другом\n" +
+                            "• Быть почти одинаковыми"
+            ).queue();
+            return true;
+        }
+
+        if (isTooSimilar(lastWord, word)) {
+            event.getChannel().sendMessage(
+                    "❌ Слово **" + word + "** слишком похоже на предыдущее **" + lastWord + "**!\n" +
+                            "Попробуйте придумать менее похожее слово."
+            ).queue();
             return true;
         }
 
@@ -119,6 +171,103 @@ public class WordGame implements CommandHandler {
                         "Всего слов: **" + wordCount + "**"
         ).queue();
         return true;
+    }
+
+
+    /**
+     * Проверяет, не слишком ли слово похоже на предыдущие слова
+     */
+    private static String checkWordSimilarity(String newWord, Set<String> usedWords) {
+        for (String usedWord : usedWords) {
+            if (isTooSimilar(usedWord, newWord)) {
+                return usedWord;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Основная проверка похожести слов взял с инета
+     */
+    public static boolean isTooSimilar(String word1, String word2) {
+        if (word1 == null || word2 == null) return false;
+
+        word1 = word1.toLowerCase().trim();
+        word2 = word2.toLowerCase().trim();
+
+        if (word1.equals(word2)) {
+            return true;
+        }
+
+        if (word1.contains(word2) || word2.contains(word1)) {
+            return true;
+        }
+
+        int minLength = Math.min(word1.length(), word2.length());
+        if (minLength >= MIN_SIMILARITY_LENGTH) {
+            String start1 = word1.substring(0, MIN_SIMILARITY_LENGTH);
+            String start2 = word2.substring(0, MIN_SIMILARITY_LENGTH);
+            if (start1.equals(start2)) {
+                return true;
+            }
+
+            String end1 = word1.substring(word1.length() - Math.min(MIN_SIMILARITY_LENGTH, word1.length()));
+            String end2 = word2.substring(word2.length() - Math.min(MIN_SIMILARITY_LENGTH, word2.length()));
+            if (end1.equals(end2)) {
+                return true;
+            }
+        }
+
+        if (getLevenshteinDistance(word1, word2) <= MAX_EDIT_DISTANCE) {
+            return true;
+        }
+        if (areAnagrams(word1, word2)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Вычисление расстояния Левенштейна взял с инета
+     */
+    private static int getLevenshteinDistance(String s1, String s2) {
+        if (Math.abs(s1.length() - s2.length()) > MAX_EDIT_DISTANCE) {
+            return MAX_EDIT_DISTANCE + 1;
+        }
+
+        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+
+        for (int i = 0; i <= s1.length(); i++) {
+            for (int j = 0; j <= s2.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    int cost = (s1.charAt(i - 1) == s2.charAt(j - 1)) ? 0 : 1;
+                    dp[i][j] = Math.min(
+                            Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1),
+                            dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+        }
+        return dp[s1.length()][s2.length()];
+    }
+
+    /**
+     * Проверка, являются ли слова анаграммами
+     */
+    private static boolean areAnagrams(String word1, String word2) {
+        if (word1.length() != word2.length()) return false;
+
+        char[] chars1 = word1.toCharArray();
+        char[] chars2 = word2.toCharArray();
+        Arrays.sort(chars1);
+        Arrays.sort(chars2);
+
+        return Arrays.equals(chars1, chars2);
     }
 
     private static char getNextLetter(String word) {
@@ -177,8 +326,10 @@ public class WordGame implements CommandHandler {
                         "1. Начните игру: `f!слово начать <слово>`\n" +
                         "2. Следующий игрок пишет слово на последнюю букву предыдущего\n" +
                         "3. Буквы 'ь', 'ъ', 'ы' пропускаются\n" +
-                        "4. Слова не должны повторяться\n" +
-                        "5. Чтобы закончить: `f!слово стоп`\n"
+                        "4. **Слова не должны повторяться**\n" +
+                        "5. **Слова не должны быть похожи на предыдущие!** (по окончанию, началу и т.д.)\n" +
+                        "6. Чтобы закончить: `f!слово стоп`\n" +
+                        "7. Текущий статус: `f!слово статус`\n"
         ).queue();
     }
 }
