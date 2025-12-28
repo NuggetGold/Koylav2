@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class Messages {
-    private static final String CONFIG_FILE = "src/Messages.json";
+    private static final String CONFIG_FILE = "Messages.json";
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject configData;
 
