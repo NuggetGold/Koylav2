@@ -2,6 +2,7 @@ package ru.nugget.commands;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.reflections.Reflections;
+import ru.nugget.log.LoggerLogic;
 
 import java.util.*;
 
@@ -40,6 +41,8 @@ public class CommandManager {
                 System.out.println("Загружена команда: " + cmd.getName());
             } catch (Exception e) {
                 e.printStackTrace();
+                var warn = e.getLocalizedMessage();
+                LoggerLogic.SendWarn(null, warn);
             }
         }
     }

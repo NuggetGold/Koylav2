@@ -7,7 +7,7 @@ import java.util.List;
 public class ping implements CommandHandler {
     @Override public String getName() { return "ping"; }
     @Override public String getDescription() { return "Пинг типа, есть же?"; }
-    @Override public List<String> getAliases() { return List.of("pingashek", "test"); }
+    @Override public List<String> getAliases() { return List.of("pingashek"); }
 
     @Override
     public void execute(MessageReceivedEvent event, List<String> args) {

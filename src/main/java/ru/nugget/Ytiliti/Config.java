@@ -11,7 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class Config {
-    private static final String CONFIG_FILE = "src/config.json";
+    private static final String CONFIG_FILE = "config.json";
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject configData;
 
