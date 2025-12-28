@@ -25,8 +25,8 @@ public class Slyshateli extends ListenerAdapter {
         // Проверки на мурка.
         if (event.getAuthor().isBot()) return;
         if (MurkDetector.isEblan(event.getAuthor())) {
-            event.getMessage().reply("Муркам и хублотам слово не давали.");
-            SendInfo(event, "Попытался выпленуть: "+ message);
+            event.getMessage().reply("Муркам и хублотам и так-же ебланом слово не давали.");
+            SendInfo(event, event.getAuthor().getName() + " Попытался выпленуть: "+ message);
             return;
         }
 
