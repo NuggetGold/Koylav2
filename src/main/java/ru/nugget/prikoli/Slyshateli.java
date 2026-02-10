@@ -4,9 +4,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import ru.nugget.Ytiliti.Config;
 import ru.nugget.commands.CommandManager;
+import ru.nugget.log.LoggerLogic;
 
-
-import static ru.nugget.log.LoggerLogic.SendInfo;
 
 // [ Берем текст от чувачокв ]
 public class Slyshateli extends ListenerAdapter {
@@ -26,8 +25,7 @@ public class Slyshateli extends ListenerAdapter {
         if (event.getAuthor().isBot()) return;
         if (MurkDetector.isEblan(event.getAuthor())) {
             event.getMessage().reply("Муркам и хублотам и так-же ебланом слово не давали.");
-            SendInfo(event, event.getAuthor().getName() + " Попытался выпленуть: "+ message);
-            return;
+            LoggerLogic.SendCritical(event, event.getAuthor().getName() + " Попытался выпленуть: "+ message);
         }
 
         if (event.getAuthor().isBot()) return;

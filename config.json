@@ -22,5 +22,12 @@
   },
   "word": {
     "banned_roles": "1454945715532071210"
+  },
+  "tickets": {
+    "category_id": "1452243930468061196",
+    "staff_role_id": "1441754422597128249",
+    "setup_channel_id": "1452243990924492841",
+    "counters": {}
   }
+
 }
